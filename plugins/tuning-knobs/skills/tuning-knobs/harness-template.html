@@ -1,0 +1,255 @@
+<!doctype html>
+<!--
+  tuning-knobs harness template.
+
+  Claude: COPY this file, then edit only the two ⟨FILL⟩ regions:
+    1. PARAMS  — one entry per tunable parameter of the real component.
+    2. renderPreview(v) — reproduce the component in plain HTML/CSS, driven by v.
+  Everything else (control rendering, state, Apply/Copy, payload) is generic — leave it.
+
+  Serve it with the bundled server so "Apply" can write to disk:
+    python3 apply_server.py --html <this-file> --out .tuner-values.json --once
+  Then open the printed http://localhost:PORT URL. (Opening via file:// disables
+  Apply — the Copy button still works as a fallback.)
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>tuning-knobs</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #171a21; --panel-2: #1e222b; --line: #2a2f3a;
+    --ink: #e7eaf0; --ink-dim: #9aa3b2; --accent: #7c9cff; --good: #54d6a0;
+    --radius: 10px; --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans);
+    display: grid; grid-template-columns: 360px 1fr; height: 100vh; overflow: hidden;
+  }
+  /* ---- controls panel ---- */
+  .controls { background: var(--panel); border-right: 1px solid var(--line);
+    overflow-y: auto; padding: 18px 18px 80px; }
+  .controls h1 { font-size: 13px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink-dim); margin: 0 0 4px; }
+  .sub { font-size: 12px; color: var(--ink-dim); margin: 0 0 18px; }
+  .group { margin-bottom: 22px; }
+  .group > .g-label { font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--ink-dim); margin: 0 0 10px; }
+  .ctrl { margin-bottom: 16px; }
+  .ctrl .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .ctrl label { font-size: 13px; color: var(--ink); }
+  .ctrl .val { font-family: var(--mono); font-size: 12px; color: var(--accent);
+    background: var(--panel-2); padding: 1px 7px; border-radius: 6px; }
+  .ctrl.changed .val { color: var(--good); }
+  input[type=range] { width: 100%; accent-color: var(--accent); margin-top: 8px; }
+  input[type=number] { width: 100%; margin-top: 6px; background: var(--panel-2);
+    border: 1px solid var(--line); color: var(--ink); border-radius: 8px;
+    padding: 7px 9px; font-family: var(--mono); font-size: 13px; }
+  select { width: 100%; margin-top: 6px; background: var(--panel-2); border: 1px solid var(--line);
+    color: var(--ink); border-radius: 8px; padding: 7px 9px; font-size: 13px; }
+  .swatch { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  input[type=color] { width: 38px; height: 30px; border: 1px solid var(--line);
+    border-radius: 8px; background: none; padding: 2px; }
+  .swatch input[type=text] { flex: 1; background: var(--panel-2); border: 1px solid var(--line);
+    color: var(--ink); border-radius: 8px; padding: 7px 9px; font-family: var(--mono); font-size: 12px; }
+  .switch { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 4px; }
+  .switch input { display: none; }
+  .track { width: 36px; height: 20px; background: var(--line); border-radius: 999px;
+    position: relative; transition: background .15s; }
+  .track::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px;
+    background: #fff; border-radius: 50%; transition: transform .15s; }
+  .switch input:checked + .track { background: var(--accent); }
+  .switch input:checked + .track::after { transform: translateX(16px); }
+  /* ---- preview ---- */
+  .stage { display: grid; grid-template-rows: 1fr auto; min-width: 0; }
+  .preview { display: grid; place-items: center; padding: 32px; overflow: auto; }
+  .footer { border-top: 1px solid var(--line); background: var(--panel);
+    padding: 12px 18px; display: flex; align-items: center; gap: 10px; }
+  .footer .meta { font-size: 12px; color: var(--ink-dim); margin-right: auto; }
+  button { font-family: var(--sans); font-size: 13px; border-radius: 8px; padding: 9px 14px;
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #0b0d12; font-weight: 600; }
+  button.ghost { background: none; }
+  .toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--good); color: #0b0d12; font-weight: 600; padding: 10px 16px; border-radius: 10px;
+    opacity: 0; transition: all .25s; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  details { margin-top: 8px; }
+  summary { font-size: 12px; color: var(--ink-dim); cursor: pointer; }
+  #payload { width: 100%; height: 150px; margin-top: 8px; background: var(--bg);
+    border: 1px solid var(--line); color: var(--ink-dim); border-radius: 8px;
+    font-family: var(--mono); font-size: 11px; padding: 8px; resize: vertical; }
+</style>
+</head>
+<body>
+  <div class="controls">
+    <h1>tuning-knobs</h1>
+    <p class="sub" id="title">Dial it in. Click <b>Apply</b> when it looks right.</p>
+    <div id="knobs"></div>
+    <details>
+      <summary>values payload (fallback)</summary>
+      <textarea id="payload" readonly></textarea>
+    </details>
+  </div>
+
+  <div class="stage">
+    <div class="preview"><div id="preview"></div></div>
+    <div class="footer">
+      <span class="meta"><b id="changed-count">0</b> changed</span>
+      <button class="ghost" id="reset">Reset</button>
+      <button id="copy">Copy values</button>
+      <button class="primary" id="apply">Apply to code →</button>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+<script>
+/* ════════════════════════════════════════════════════════════════════════
+   ⟨FILL 1⟩  PARAMS — one entry per tunable parameter.
+   type: "range" | "number" | "color" | "select" | "toggle"
+   range/number → min, max, step, unit (unit "" for unitless)
+   select       → options: ["a","b"]
+   target (optional but recommended): how this maps back to source, e.g.
+     "--card-padding"  (CSS custom property)  |  "transition.duration (ms)"
+   The example below tunes a generic "card". REPLACE it with the real one.
+   ════════════════════════════════════════════════════════════════════════ */
+const PARAMS = [
+  { id: "padding",   label: "Padding",        group: "Spacing", type: "range",  min: 8,  max: 48, step: 1,    unit: "px",  value: 20,  target: "--card-padding" },
+  { id: "radius",    label: "Corner radius",  group: "Spacing", type: "range",  min: 0,  max: 32, step: 1,    unit: "px",  value: 10,  target: "--card-radius" },
+  { id: "gap",       label: "Content gap",    group: "Spacing", type: "range",  min: 0,  max: 24, step: 1,    unit: "px",  value: 8,   target: "--card-gap" },
+  { id: "shadowY",   label: "Shadow offset",  group: "Elevation", type: "range", min: 0, max: 40, step: 1,    unit: "px",  value: 8,   target: "--card-shadow-y" },
+  { id: "shadowBlur",label: "Shadow blur",    group: "Elevation", type: "range", min: 0, max: 60, step: 1,    unit: "px",  value: 24,  target: "--card-shadow-blur" },
+  { id: "accent",    label: "Accent",         group: "Color",   type: "color",                                value: "#7c9cff", target: "--card-accent" },
+  { id: "duration",  label: "Hover duration", group: "Motion",  type: "range",  min: 0,  max: 600, step: 10,  unit: "ms",  value: 160, target: "transition-duration" },
+  { id: "easing",    label: "Easing",         group: "Motion",  type: "select", options: ["ease","ease-out","cubic-bezier(.2,.8,.2,1)","linear"], value: "cubic-bezier(.2,.8,.2,1)", target: "transition-timing-function" },
+  { id: "lift",      label: "Lift on hover",  group: "Motion",  type: "toggle",                               value: true, target: "hover translateY" },
+];
+
+/* ════════════════════════════════════════════════════════════════════════
+   ⟨FILL 2⟩  renderPreview(v) — reproduce the REAL component in HTML/CSS,
+   driven entirely by v (the live values, keyed by PARAMS id).
+   Make it look like the real thing so eyeballing is honest.
+   ════════════════════════════════════════════════════════════════════════ */
+function renderPreview(v) {
+  return `
+    <div style="
+      padding:${v.padding}px; border-radius:${v.radius}px; max-width:300px;
+      display:flex; flex-direction:column; gap:${v.gap}px;
+      background:#1b1f29; color:#e7eaf0; cursor:pointer;
+      box-shadow:0 ${v.shadowY}px ${v.shadowBlur}px rgba(0,0,0,.45);
+      border-top:3px solid ${v.accent};
+      transition-property:transform,box-shadow;
+      transition-duration:${v.duration}ms; transition-timing-function:${v.easing};"
+      onmouseover="if(${v.lift})this.style.transform='translateY(-6px)'"
+      onmouseout="this.style.transform='translateY(0)'">
+      <strong style="font-size:15px;">Card title</strong>
+      <span style="font-size:13px;color:#9aa3b2;line-height:1.5;">
+        Hover me. Every number on the left is live.</span>
+      <span style="font-size:13px;color:${v.accent};font-weight:600;">Call to action →</span>
+    </div>`;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   GENERIC ENGINE — leave everything below unchanged.
+   ════════════════════════════════════════════════════════════════════════ */
+const defaults = Object.fromEntries(PARAMS.map(p => [p.id, p.value]));
+const state = { ...defaults };
+
+function fmt(p) { return p.unit ? `${state[p.id]}${p.unit}` : `${state[p.id]}`; }
+function isChanged(p) { return JSON.stringify(state[p.id]) !== JSON.stringify(p.value); }
+
+function buildControls() {
+  const groups = {};
+  PARAMS.forEach(p => (groups[p.group || "Parameters"] ??= []).push(p));
+  const root = document.getElementById("knobs");
+  root.innerHTML = Object.entries(groups).map(([g, ps]) => `
+    <div class="group"><p class="g-label">${g}</p>
+    ${ps.map(controlHTML).join("")}</div>`).join("");
+  PARAMS.forEach(wireControl);
+}
+
+function controlHTML(p) {
+  const head = `<div class="row"><label for="c-${p.id}">${p.label}</label>
+    <span class="val" id="v-${p.id}">${typeof state[p.id] === "boolean" ? state[p.id] : fmt(p)}</span></div>`;
+  let body = "";
+  if (p.type === "range")  body = `<input type="range" id="c-${p.id}" min="${p.min}" max="${p.max}" step="${p.step}" value="${state[p.id]}">`;
+  if (p.type === "number") body = `<input type="number" id="c-${p.id}" min="${p.min ?? ""}" max="${p.max ?? ""}" step="${p.step ?? 1}" value="${state[p.id]}">`;
+  if (p.type === "select") body = `<select id="c-${p.id}">${p.options.map(o => `<option ${o === state[p.id] ? "selected" : ""}>${o}</option>`).join("")}</select>`;
+  if (p.type === "color")  body = `<div class="swatch"><input type="color" id="c-${p.id}" value="${state[p.id]}"><input type="text" id="t-${p.id}" value="${state[p.id]}"></div>`;
+  if (p.type === "toggle") body = `<label class="switch"><input type="checkbox" id="c-${p.id}" ${state[p.id] ? "checked" : ""}><span class="track"></span></label>`;
+  return `<div class="ctrl ${isChanged(p) ? "changed" : ""}" id="ctrl-${p.id}">${head}${body}</div>`;
+}
+
+function wireControl(p) {
+  const el = document.getElementById(`c-${p.id}`);
+  const set = (raw) => {
+    let val = raw;
+    if (p.type === "range" || p.type === "number") val = parseFloat(raw);
+    if (p.type === "toggle") val = el.checked;
+    state[p.id] = val;
+    updateAll();
+  };
+  if (p.type === "color") {
+    const txt = document.getElementById(`t-${p.id}`);
+    el.addEventListener("input", () => { txt.value = el.value; set(el.value); });
+    txt.addEventListener("change", () => { el.value = txt.value; set(txt.value); });
+  } else {
+    el.addEventListener("input", () => set(el.value));
+  }
+}
+
+function updateAll() {
+  document.getElementById("preview").innerHTML = renderPreview(state);
+  let changed = 0;
+  PARAMS.forEach(p => {
+    const c = isChanged(p); if (c) changed++;
+    const vEl = document.getElementById(`v-${p.id}`);
+    if (vEl) vEl.textContent = typeof state[p.id] === "boolean" ? state[p.id] : fmt(p);
+    document.getElementById(`ctrl-${p.id}`)?.classList.toggle("changed", c);
+  });
+  document.getElementById("changed-count").textContent = changed;
+  document.getElementById("payload").value = JSON.stringify(buildPayload(), null, 2);
+}
+
+function buildPayload() {
+  const changed = {}, meta = {};
+  PARAMS.forEach(p => {
+    if (isChanged(p)) changed[p.id] = state[p.id];
+    meta[p.id] = { default: p.value, unit: p.unit || null, target: p.target || null };
+  });
+  return { changed, all: { ...state }, meta };
+}
+
+function toast(msg, color) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.style.background = color || "var(--good)";
+  t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 2600);
+}
+
+document.getElementById("reset").onclick = () => {
+  Object.assign(state, defaults); buildControls(); updateAll();
+};
+document.getElementById("copy").onclick = async () => {
+  await navigator.clipboard.writeText(JSON.stringify(buildPayload(), null, 2));
+  toast("Values copied — paste them back to Claude");
+};
+document.getElementById("apply").onclick = async () => {
+  try {
+    const r = await fetch("/apply", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(buildPayload()) });
+    if (!r.ok) throw new Error(r.status);
+    toast("Applied — return to Claude to write it into your code");
+  } catch (e) {
+    toast("No server — use Copy values instead (file:// can't Apply)", "#f0a35e");
+  }
+};
+
+buildControls();
+updateAll();
+</script>
+</body>
+</html>

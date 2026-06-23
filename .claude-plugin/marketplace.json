@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "tuning-knobs",
+  "description": "Visually tune a frontend component's parameters with knobs and switches, then write the values back into your code.",
+  "owner": {
+    "name": "Hansen Liang",
+    "email": "thehansenliang@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "tuning-knobs",
+      "description": "Build a throwaway interactive harness with knobs, sliders, and switches to dial in a component's spacing, sizing, color, shadow, and motion by eye — then write the chosen values straight back into the real source. The closed-loop alternative to nudging numbers one at a time in chat.",
+      "category": "development",
+      "source": "./plugins/tuning-knobs"
+    }
+  ]
+}

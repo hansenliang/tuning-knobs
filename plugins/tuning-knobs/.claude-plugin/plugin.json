@@ -1,0 +1,9 @@
+{
+  "name": "tuning-knobs",
+  "description": "Build a throwaway interactive harness with knobs, sliders, and switches to dial in a frontend component's visual parameters by eye, then write the chosen values straight back into the real source.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Hansen Liang",
+    "email": "thehansenliang@gmail.com"
+  }
+}
