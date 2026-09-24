@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>WatchGPT Simulator</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --ground: #EDEFF2; --panel: #F7F8FA; --ink: #14171B; --ink-2: #4A515B; --ink-3: #7A828D; --rule: #D5D9DF; --chip: #E2E5EA;
+  --accent-ink: #A86300; --ok: #1E8E3E; --bad: #C5221F;
+  --bezel: #1B1D21; --bezel-edge: #3A3E45;
+  --w-bg: #000; --w-text: #fff; --w-dim: #9A9AA0; --w-card: #1C1C1F; --w-amber: #FFB547; --w-amber-deep: #C77800; --w-red: #FF453A;
+  --body: "Hanken Grotesk", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --watch: -apple-system, "SF Compact Text", "Inter Tight", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { color-scheme: dark; --ground: #101215; --panel: #171A1E; --ink: #ECEEF1; --ink-2: #B3BAC4; --ink-3: #7E8691; --rule: #2A2F36; --chip: #22262C; --accent-ink: #FFB547; --ok: #5BD17A; --bad: #FF7B72; --bezel: #26292E; --bezel-edge: #464B53; } }
+:root[data-theme="dark"] { color-scheme: dark; --ground: #101215; --panel: #171A1E; --ink: #ECEEF1; --ink-2: #B3BAC4; --ink-3: #7E8691; --rule: #2A2F36; --chip: #22262C; --accent-ink: #FFB547; --ok: #5BD17A; --bad: #FF7B72; --bezel: #26292E; --bezel-edge: #464B53; }
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--ground); color: var(--ink); font: 15px/1.5 var(--body); padding: 0 16px; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-block: 28px 40px; display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 36px; }
+h1 { font-size: 22px; margin: 0 0 4px; font-weight: 600; }
+.sub { color: var(--ink-2); margin: 0 0 18px; font-size: 14px; }
+.status { font-family: var(--mono); font-size: 12px; color: var(--ink-3); display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+.status span { background: var(--chip); padding: 2px 7px; border-radius: 4px; }
+.status .ok { color: var(--ok); } .status .bad { color: var(--bad); }
+
+/* device */
+.watch { position: relative; width: 272px; padding: 12px; border-radius: 68px; background: linear-gradient(145deg, var(--bezel-edge), var(--bezel) 40%); }
+.watch::after { content: ""; position: absolute; right: -7px; top: 78px; width: 9px; height: 42px; border-radius: 3px; background: linear-gradient(90deg, #2c2f34, #55595f); }
+.screen { position: relative; height: 300px; border-radius: 56px; background: var(--w-bg); color: var(--w-text); overflow: hidden; font-family: var(--watch); padding: 18px 20px 16px; display: flex; flex-direction: column; -webkit-font-smoothing: antialiased; }
+.sb { display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; height: 22px; flex: none; }
+.sb .title { color: var(--w-amber); } .sb .clock { font-variant-numeric: tabular-nums; }
+.view { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.view[hidden] { display: none !important; }
+.center { align-items: center; justify-content: center; text-align: center; gap: 14px; }
+.small { font-size: 13px; color: var(--w-dim); line-height: 1.3; }
+.foot { display: flex; gap: 8px; flex: none; }
+.wbtn { flex: 1; height: 40px; border: 0; border-radius: 20px; background: var(--w-card); color: var(--w-text); font: 600 15px var(--watch); cursor: pointer; }
+.wbtn.amber { background: var(--w-amber); color: #1a1000; } .wbtn.red { background: rgba(255,69,58,.22); color: var(--w-red); }
+.wbtn:focus-visible, .mic:focus-visible, .pill:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.mic { width: 108px; height: 108px; border: 0; border-radius: 50%; cursor: pointer; background: radial-gradient(circle at 35% 30%, #FFD08A, var(--w-amber) 45%, var(--w-amber-deep)); box-shadow: 0 0 0 7px rgba(255,181,71,.13); display: grid; place-items: center; }
+.mic svg { width: 42px; height: 42px; color: #241500; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 0; border-radius: 18px; background: var(--w-card); color: #fff; font: 600 14px var(--watch); cursor: pointer; }
+.pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--w-amber); }
+.bars { display: flex; align-items: center; gap: 4px; height: 76px; }
+.bars i { width: 6px; border-radius: 3px; background: var(--w-amber); height: 8px; transition: height .08s; }
+.thread { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-top: 8px; scrollbar-width: none; }
+.bubble { align-self: flex-end; max-width: 88%; background: #2C2C30; border-radius: 16px 16px 4px 16px; padding: 7px 10px; font-size: 14.5px; }
+.reply { font-size: 16px; line-height: 1.3; }
+.orb { width: 116px; height: 116px; border-radius: 50%; border: 0; cursor: pointer; background: radial-gradient(circle at 40% 35%, #FFE2B0 0%, #FFB547 38%, #D77A00 70%, #5a2e00 100%); box-shadow: 0 0 40px 6px rgba(255,160,40,.28); transition: transform .08s; }
+.caption { font-size: 14.5px; line-height: 1.3; min-height: 38px; max-height: 58px; overflow: hidden; }
+
+/* side panel */
+.panel { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.card { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; }
+.card h2 { font-size: 12px; font-family: var(--mono); font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 10px; }
+form.ask { display: flex; gap: 8px; }
+form.ask input { flex: 1; min-width: 0; font: 15px var(--body); padding: 9px 11px; border: 1px solid var(--rule); border-radius: 8px; background: var(--ground); color: var(--ink); }
+form.ask button, .chips button { font: 600 14px var(--body); padding: 9px 14px; border-radius: 8px; border: 1px solid var(--rule); background: var(--ink); color: var(--ground); cursor: pointer; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.chips button { background: var(--chip); color: var(--ink-2); font-weight: 500; padding: 5px 10px; font-size: 13px; }
+.opts { display: flex; gap: 16px; margin-top: 10px; font-size: 13.5px; color: var(--ink-2); flex-wrap: wrap; }
+.metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.metric b { display: block; font: 600 22px var(--mono); font-variant-numeric: tabular-nums; }
+.metric span { font-size: 12.5px; color: var(--ink-3); }
+.log { font: 12px/1.5 var(--mono); height: 280px; overflow: auto; white-space: pre-wrap; word-break: break-all; color: var(--ink-2); }
+.log .k { color: var(--accent-ink); }
+@media (max-width: 760px) { .wrap { grid-template-columns: 1fr; justify-items: center; } .panel { width: 100%; } .metrics { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-mic" viewBox="0 0 24 24"><path fill="currentColor" d="M12 14.5a3.5 3.5 0 0 0 3.5-3.5V5.5a3.5 3.5 0 1 0-7 0V11a3.5 3.5 0 0 0 3.5 3.5Zm6-3.6a.9.9 0 0 0-1.8 0 4.2 4.2 0 0 1-8.4 0 .9.9 0 0 0-1.8 0 6 6 0 0 0 5.1 5.9V19H8.9a.9.9 0 0 0 0 1.8h6.2a.9.9 0 0 0 0-1.8h-2.2v-2.2a6 6 0 0 0 5.1-5.9Z"/></symbol></svg>
+<div class="wrap">
+  <div>
+    <h1>WatchGPT Simulator</h1>
+    <p class="sub">A reference client for the gateway protocol. The Swift app does the same thing.</p>
+    <div class="status" id="status"><span>connecting…</span></div>
+    <div class="watch"><div class="screen">
+      <div class="sb"><span class="title" id="title">Ask</span><span class="clock" id="clock">9:41</span></div>
+
+      <div class="view center" id="v-home">
+        <button class="mic" id="mic" aria-label="Talk"><svg><use href="#i-mic"/></svg></button>
+        <button class="pill" id="live-btn"><i></i>Live</button>
+      </div>
+
+      <div class="view center" id="v-listen" hidden>
+        <div class="bars" id="bars"></div>
+        <div class="small">Tap Send when you're done</div>
+        <div class="foot" style="width:100%"><button class="wbtn red" id="cancel" style="flex:none;width:40px">✕</button><button class="wbtn amber" id="send">Send</button></div>
+      </div>
+
+      <div class="view" id="v-answer" hidden>
+        <div class="thread" id="thread"></div>
+        <div class="foot"><button class="wbtn" id="stop" style="flex:none;width:40px">■</button><button class="wbtn amber" id="again">Ask again</button></div>
+      </div>
+
+      <div class="view center" id="v-live" hidden>
+        <button class="orb" id="orb" aria-label="Interrupt"></button>
+        <div class="caption" id="caption">Connecting…</div>
+        <div class="foot" style="width:100%"><button class="wbtn red" id="end-live">End</button></div>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="panel">
+    <div class="card">
+      <h2>Ask by text (stands in for dictation)</h2>
+      <form class="ask" id="ask"><input id="q" placeholder="What's a good 20 minute dinner?" autocomplete="off"><button>Send</button></form>
+      <div class="chips" id="chips"></div>
+      <div class="opts">
+        <label><input type="checkbox" id="voice" checked> Spoken reply (reply=voice)</label>
+        <label><input type="checkbox" id="smart"> Smart model</label>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Last turn latency</h2>
+      <div class="metrics">
+        <div class="metric"><b id="m-tr">–</b><span>transcript</span></div>
+        <div class="metric"><b id="m-tt">–</b><span>first text</span></div>
+        <div class="metric"><b id="m-ta">–</b><span>first audio</span></div>
+        <div class="metric"><b id="m-done">–</b><span>complete</span></div>
+      </div>
+    </div>
+    <div class="card" id="drop-card" hidden><button type="button" id="drop" style="font:600 14px var(--body);padding:8px 12px;border-radius:8px;border:1px solid var(--rule);background:var(--chip);color:var(--ink);cursor:pointer">Simulate network drop (tests resume)</button></div>
+    <div class="card"><h2>Wire events</h2><div class="log" id="log"></div></div>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const state = { token: null, conv: null, demo: false, rec: null, abort: null, player: null, live: null };
+const views = ['home', 'listen', 'answer', 'live'];
+function show(v, title) { views.forEach((x) => ($('v-' + x).hidden = x !== v)); $('title').textContent = title; }
+function log(dir, obj) {
+  const el = $('log');
+  const o = { ...obj }; if (o.data) o.data = `<${Math.round(o.data.length * 0.75 / 1024)} KB base64>`;
+  el.insertAdjacentHTML('beforeend', `<div><span class="k">${dir}</span> ${escapeHtml(JSON.stringify(o))}</div>`);
+  el.scrollTop = el.scrollHeight;
+}
+const escapeHtml = (s) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+setInterval(() => { const d = new Date(); $('clock').textContent = `${d.getHours() % 12 || 12}:${String(d.getMinutes()).padStart(2, '0')}`; }, 1000);
+for (let i = 0; i < 10; i++) $('bars').appendChild(document.createElement('i'));
+["What's a good 20 minute dinner?", 'Explain how tides work', 'Draft a text: running 10 min late'].forEach((q) => {
+  const b = document.createElement('button'); b.type = 'button'; b.textContent = q; b.onclick = () => ask({ text: q }); $('chips').appendChild(b);
+});
+
+// ---------- boot: register a device (anonymous account) ----------
+async function boot() {
+  try {
+    const h = await (await fetch('/healthz')).json();
+    let saved = null; try { saved = JSON.parse(localStorage.getItem('wgpt') || 'null'); } catch {}
+    if (saved) { const me = await fetch('/v1/me', { headers: { Authorization: `Bearer ${saved.token}` } }); if (me.ok) state.token = saved.token; }
+    if (!state.token) {
+      const r = await (await fetch('/v1/devices', { method: 'POST', body: JSON.stringify({ platform: 'web-sim' }) })).json();
+      state.token = r.token; try { localStorage.setItem('wgpt', JSON.stringify({ token: r.token })); } catch {}
+    }
+    $('status').innerHTML = Object.entries(h.providers).map(([k, v]) => `<span>${k}: <b class="${v === 'mock' ? '' : 'ok'}">${v}</b></span>`).join('');
+  } catch {
+    state.demo = true;
+    $('status').innerHTML = '<span class="bad">no gateway · demo mode (canned events)</span>';
+  }
+}
+
+// ---------- audio playback queue for audio.segment ----------
+let ctx;
+const audioCtx = () => (ctx ??= new AudioContext());
+function makePlayer() {
+  let tail = Promise.resolve(); let current = null; let stopped = false;
+  return {
+    enqueue(b64) {
+      const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+      const decoded = audioCtx().decodeAudioData(bytes.buffer);
+      tail = tail.then(async () => {
+        if (stopped) return;
+        const buf = await decoded; const src = audioCtx().createBufferSource();
+        src.buffer = buf; src.connect(audioCtx().destination); current = src; src.start();
+        await new Promise((r) => (src.onended = r));
+      });
+    },
+    stop() { stopped = true; try { current?.stop(); } catch {} },
+  };
+}
+
+// ---------- turn mode ----------
+async function ask({ text, audio, mime }) {
+  state.abort?.abort(); state.player?.stop();
+  const abort = (state.abort = new AbortController());
+  const player = (state.player = makePlayer());
+  show('answer', 'Ask');
+  const thread = $('thread');
+  const bubble = document.createElement('div'); bubble.className = 'bubble'; bubble.textContent = text ?? '…';
+  const reply = document.createElement('div'); reply.className = 'reply';
+  thread.append(bubble, reply);
+  ['m-tr', 'm-tt', 'm-ta', 'm-done'].forEach((id) => ($(id).textContent = '–'));
+  const t0 = performance.now(); const mark = (id) => { if ($(id).textContent === '–') $(id).textContent = ((performance.now() - t0) / 1000).toFixed(2) + 's'; };
+  const reply_mode = $('voice').checked ? 'voice' : 'text';
+  const onEvent = (e) => {
+    log('←', e);
+    if (e.type === 'turn.started') state.conv = e.conversation_id;
+    if (e.type === 'transcript') { bubble.textContent = e.text; mark('m-tr'); }
+    if (e.type === 'text.delta') { reply.textContent += e.text; mark('m-tt'); thread.scrollTop = thread.scrollHeight; }
+    if (e.type === 'audio.segment') { mark('m-ta'); player.enqueue(e.data); $('title').textContent = '♪ Answer'; }
+    if (e.type === 'turn.completed') mark('m-done');
+    if (e.type === 'error') reply.textContent += ` [${e.code}: ${e.message}]`;
+  };
+  if (state.demo) return demoTurn(text ?? 'Hello', onEvent, reply_mode);
+  const q = new URLSearchParams({ reply: reply_mode, model: $('smart').checked ? 'smart' : 'fast' });
+  if (state.conv) q.set('conversation_id', state.conv);
+  const init = audio
+    ? { body: audio, headers: { 'Content-Type': mime } }
+    : { body: JSON.stringify({ text }), headers: { 'Content-Type': 'application/json' } };
+  log('→', { POST: `/v1/turns?${q}`, ...(audio ? { audio_bytes: audio.size, mime } : { text }) });
+  try {
+    const res = await fetch(`/v1/turns?${q}`, { method: 'POST', signal: abort.signal, ...init, headers: { ...init.headers, Authorization: `Bearer ${state.token}` } });
+    if (!res.ok) return onEvent({ type: 'error', ...(await res.json()) });
+    const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = '';
+    for (;;) {
+      const { value, done } = await reader.read(); if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let nl; while ((nl = buf.indexOf('\n')) >= 0) { const line = buf.slice(0, nl); buf = buf.slice(nl + 1); if (line.trim()) onEvent(JSON.parse(line)); }
+    }
+  } catch (err) { if (!abort.signal.aborted) onEvent({ type: 'error', code: 'network', message: String(err) }); }
+}
+
+async function demoTurn(text, onEvent, mode) {
+  const answer = 'Garlic butter shrimp over rice. Sear the shrimp two minutes a side, then toss with butter, garlic and lemon. Want the full steps?';
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  onEvent({ type: 'turn.started', turn_id: 't_demo', conversation_id: 'c_demo' });
+  await sleep(350);
+  let seq = 0;
+  for (const s of answer.match(/[^.?!]+[.?!]\s*/g)) {
+    for (const w of s.split(/(?<=\s)/)) { onEvent({ type: 'text.delta', text: w }); await sleep(35); }
+    if (mode === 'voice') { onEvent({ type: 'audio.segment', seq: seq++, format: 'wav', text: s.trim(), data: chimeWav(s.split(' ').length) }); }
+  }
+  onEvent({ type: 'turn.completed', turn_id: 't_demo', text: answer });
+}
+function chimeWav(words) {
+  const sr = 16000, n = Math.floor(sr * Math.min(3, 0.12 * words + 0.2)), b = new DataView(new ArrayBuffer(44 + n * 2));
+  const w = (o, s) => [...s].forEach((c, i) => b.setUint8(o + i, c.charCodeAt(0)));
+  w(0, 'RIFF'); b.setUint32(4, 36 + n * 2, true); w(8, 'WAVEfmt '); b.setUint32(16, 16, true); b.setUint16(20, 1, true); b.setUint16(22, 1, true);
+  b.setUint32(24, sr, true); b.setUint32(28, sr * 2, true); b.setUint16(32, 2, true); b.setUint16(34, 16, true); w(36, 'data'); b.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) b.setInt16(44 + i * 2, Math.sin(2 * Math.PI * (i < n / 2 ? 523 : 659) * i / sr) * 5000 * Math.min(1, i / 300, (n - i) / 300), true);
+  let s = ''; new Uint8Array(b.buffer).forEach((x) => (s += String.fromCharCode(x))); return btoa(s);
+}
+
+// ---------- push to talk (mic) ----------
+$('mic').onclick = async () => {
+  if (state.demo) return ask({ text: "What's a good 20 minute dinner?" });
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch { log('!', { error: 'Microphone blocked. Use the text box instead.' }); return; }
+  const mime = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
+  const rec = new MediaRecorder(stream, { mimeType: mime }); const chunks = [];
+  rec.ondataavailable = (e) => chunks.push(e.data);
+  const an = audioCtx().createAnalyser(); audioCtx().createMediaStreamSource(stream).connect(an);
+  const data = new Uint8Array(an.frequencyBinCount); const bars = [...$('bars').children];
+  const draw = () => { if (rec.state !== 'recording') return; an.getByteFrequencyData(data); bars.forEach((b, i) => (b.style.height = 8 + (data[i * 3 + 2] / 255) * 66 + 'px')); requestAnimationFrame(draw); };
+  rec.onstop = () => { stream.getTracks().forEach((t) => t.stop()); if (!rec.cancelled) ask({ audio: new Blob(chunks, { type: mime }), mime }); else show('home', 'Ask'); };
+  rec.start(); state.rec = rec; show('listen', 'Listening'); draw();
+  setTimeout(() => rec.state === 'recording' && rec.stop(), 60000);
+};
+$('send').onclick = () => state.rec?.stop();
+$('cancel').onclick = () => { if (state.rec) { state.rec.cancelled = true; state.rec.stop(); } };
+$('stop').onclick = () => { state.abort?.abort(); state.player?.stop(); $('title').textContent = 'Ask'; };
+$('again').onclick = () => $('mic').click();
+$('ask').onsubmit = (e) => { e.preventDefault(); const t = $('q').value.trim(); if (t) { ask({ text: t }); $('q').value = ''; } };
+
+// ---------- live mode (WebSocket, PCM16 24 kHz both ways) ----------
+const WORKLET = `class Cap extends AudioWorkletProcessor { constructor(){super();this.b=[];} process(i){const c=i[0][0]; if(c){for(const s of c)this.b.push(s); if(this.b.length>=2400){const o=new Int16Array(this.b.length); this.b.forEach((s,k)=>o[k]=Math.max(-1,Math.min(1,s))*32767); this.port.postMessage(o.buffer,[o.buffer]); this.b=[];}} return true;} } registerProcessor('cap',Cap);`;
+$('live-btn').onclick = async () => {
+  if (state.demo) { log('!', { error: 'Live mode needs the gateway (npm start).' }); return; }
+  show('live', 'Live'); $('caption').textContent = 'Connecting…';
+  const ac = new AudioContext({ sampleRate: 24000 });
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+  catch { $('caption').textContent = 'Microphone blocked.'; return; }
+  await ac.audioWorklet.addModule(URL.createObjectURL(new Blob([WORKLET], { type: 'text/javascript' })));
+  const node = new AudioWorkletNode(ac, 'cap'); ac.createMediaStreamSource(stream).connect(node);
+  let playAt = 0; const sources = new Set(); let reply = ''; let ready = false; let ws; let sessionId = null; let ended = false;
+  const flush = () => { sources.forEach((s) => { try { s.stop(); } catch {} }); sources.clear(); playAt = 0; };
+  node.port.onmessage = (e) => ws?.readyState === 1 && ready && ws.send(e.data);
+  const connect = (resumeId) => {
+    ready = false;
+    ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/v1/live?token=${state.token}`);
+    ws.binaryType = 'arraybuffer';
+    ws.onopen = () => { const m = { type: 'session.start', conversation_id: state.conv, vad: 'server', ...(resumeId && { resume_session_id: resumeId }) }; ws.send(JSON.stringify(m)); log('→', m); };
+    ws.onmessage = (e) => {
+      if (e.data instanceof ArrayBuffer) {
+        const pcm = new Int16Array(e.data); const buf = ac.createBuffer(1, pcm.length, 24000);
+        const ch = buf.getChannelData(0); pcm.forEach((s, i) => (ch[i] = s / 32768));
+        const src = ac.createBufferSource(); src.buffer = buf; src.connect(ac.destination);
+        playAt = Math.max(playAt, ac.currentTime + 0.05); src.start(playAt); playAt += buf.duration;
+        sources.add(src); src.onended = () => sources.delete(src);
+        $('orb').style.transform = `scale(${1 + Math.min(0.15, Math.abs(ch[0]) * 2)})`;
+        return;
+      }
+      const m = JSON.parse(e.data); if (m.type !== 'usage') log('←', m);
+      if (m.type === 'session.ready') { ready = true; sessionId = m.session_id; state.conv = m.conversation_id; $('caption').textContent = m.resumed ? 'Reconnected. Listening…' : 'Listening…'; }
+      if (m.type === 'speech.started') { flush(); reply = ''; $('caption').textContent = 'Listening…'; }
+      if (m.type === 'transcript.user') $('caption').textContent = '“' + m.text + '”';
+      if (m.type === 'transcript.assistant.delta') { reply += m.text; $('caption').textContent = reply; }
+      if (m.type === 'response.done') reply = '';
+      if (m.type === 'usage') $('title').textContent = `Live · ${m.live_seconds}s`;
+      if (m.type === 'error') $('caption').textContent = m.message;
+    };
+    ws.onclose = (e) => {
+      log('←', { close: e.code, reason: e.reason });
+      // Abnormal close (1006) = network drop: resume the same session, like the watch must.
+      if (!ended && e.code === 1006 && sessionId) { $('caption').textContent = 'Reconnecting…'; setTimeout(() => connect(sessionId), 250); return; }
+      if (!$('v-live').hidden) end();
+    };
+  };
+  const end = () => { ended = true; try { ws.send(JSON.stringify({ type: 'session.end' })); } catch {} ws.close(); stream.getTracks().forEach((t) => t.stop()); ac.close(); $('drop-card').hidden = true; show('home', 'Ask'); };
+  connect(null);
+  $('drop-card').hidden = false;
+  $('drop').onclick = () => { log('!', { simulate: 'network drop (no session.end)' }); ws.onclose({ code: 1006, reason: 'simulated' }); ws.onclose = null; ws.close(); };
+  $('end-live').onclick = end;
+  $('orb').onclick = () => { flush(); ws.send(JSON.stringify({ type: 'response.cancel' })); log('→', { type: 'response.cancel' }); };
+};
+
+boot();
+</script>
+</body>
+</html>

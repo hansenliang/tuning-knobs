@@ -1,0 +1,428 @@
+<title>WatchGPT Screens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Hanken+Grotesk:wght@400;500;600&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --ground: #EDEFF2;
+  --panel: #F7F8FA;
+  --ink: #14171B;
+  --ink-2: #4A515B;
+  --ink-3: #7A828D;
+  --rule: #D5D9DF;
+  --accent-ink: #A86300;
+  --chip: #E2E5EA;
+  --bezel: #1B1D21;
+  --bezel-edge: #3A3E45;
+  /* watch UI (always dark, OLED) */
+  --w-bg: #000;
+  --w-text: #FFFFFF;
+  --w-dim: #9A9AA0;
+  --w-faint: #2A2A2E;
+  --w-card: #1C1C1F;
+  --w-amber: #FFB547;
+  --w-amber-deep: #C77800;
+  --w-red: #FF453A;
+  --w-green: #32D74B;
+  --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --body: "Hanken Grotesk", "Helvetica Neue", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --watch: -apple-system, "SF Compact Text", "SF Pro Text", "Inter Tight", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ground: #101215; --panel: #171A1E; --ink: #ECEEF1; --ink-2: #B3BAC4; --ink-3: #7E8691;
+    --rule: #2A2F36; --accent-ink: #FFB547; --chip: #22262C; --bezel: #26292E; --bezel-edge: #464B53;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #101215; --panel: #171A1E; --ink: #ECEEF1; --ink-2: #B3BAC4; --ink-3: #7E8691;
+  --rule: #2A2F36; --accent-ink: #FFB547; --chip: #22262C; --bezel: #26292E; --bezel-edge: #464B53;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--ground); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.55;
+  padding: 0 20px; margin: 0;
+}
+.wrap { max-width: 1180px; margin: 0 auto; padding-block: 48px 72px; }
+
+header.top { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 40px; align-items: end; padding-bottom: 36px; border-bottom: 1px solid var(--rule); }
+.eyebrow { font-family: var(--mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(34px, 5vw, 56px); line-height: 1.02; letter-spacing: -.02em; margin: 10px 0 0; text-wrap: balance; }
+h1 em { font-style: normal; color: var(--accent-ink); }
+.lede { color: var(--ink-2); max-width: 52ch; margin: 0; }
+.lede b { color: var(--ink); font-weight: 600; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.legend span { font-family: var(--mono); font-size: 11.5px; background: var(--chip); color: var(--ink-2); padding: 3px 8px; border-radius: 4px; }
+
+section.flow { padding-top: 44px; }
+.flow-head { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 24px; align-items: baseline; margin-bottom: 22px; }
+.flow-head h2 { font-family: var(--display); font-weight: 500; font-size: 26px; letter-spacing: -.01em; margin: 0; }
+.flow-head p { margin: 0; color: var(--ink-2); max-width: 70ch; }
+.row { display: flex; flex-wrap: wrap; gap: 28px 26px; }
+
+figure.shot { margin: 0; width: 244px; display: flex; flex-direction: column; gap: 12px; }
+figcaption { display: flex; flex-direction: column; gap: 4px; }
+figcaption .t { font-weight: 600; font-size: 14.5px; }
+figcaption .t i { font-style: normal; font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); margin-right: 6px; }
+figcaption .d { color: var(--ink-2); font-size: 13.5px; line-height: 1.45; }
+figcaption code { font-family: var(--mono); font-size: 11.5px; color: var(--accent-ink); }
+
+/* ---------- the device ---------- */
+.watch { position: relative; width: 244px; padding: 11px; border-radius: 62px; background: linear-gradient(145deg, var(--bezel-edge), var(--bezel) 40%); box-shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 14px 30px -18px rgba(0,0,0,.55); }
+.watch::after { /* digital crown */
+  content: ""; position: absolute; right: -6px; top: 70px; width: 8px; height: 38px; border-radius: 3px; background: linear-gradient(90deg, #2c2f34, #55595f);
+}
+.watch::before { /* side button */
+  content: ""; position: absolute; right: -4px; top: 130px; width: 5px; height: 44px; border-radius: 2px; background: #2c2f34;
+}
+.screen {
+  position: relative; height: 270px; border-radius: 52px; background: var(--w-bg); color: var(--w-text); overflow: hidden;
+  font-family: var(--watch); font-size: 16px; line-height: 1.25; padding: 16px 18px 14px; display: flex; flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+}
+.sb { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 600; height: 20px; flex: none; }
+.sb .title { color: var(--w-amber); }
+.sb .time { color: var(--w-text); font-variant-numeric: tabular-nums; }
+.sb .title.dim { color: var(--w-dim); }
+.body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.center { align-items: center; justify-content: center; text-align: center; }
+.small { font-size: 13px; color: var(--w-dim); line-height: 1.3; }
+.foot { display: flex; gap: 8px; flex: none; }
+.btn { flex: 1; height: 38px; border-radius: 19px; background: var(--w-card); display: grid; place-items: center; font-weight: 600; font-size: 15px; color: var(--w-text); }
+.btn.amber { background: var(--w-amber); color: #1a1000; }
+.btn.red { background: rgba(255,69,58,.22); color: var(--w-red); }
+.btn.round { flex: none; width: 38px; }
+.btn svg { width: 18px; height: 18px; }
+
+/* mic hero */
+.mic { width: 104px; height: 104px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFD08A, var(--w-amber) 45%, var(--w-amber-deep)); display: grid; place-items: center; box-shadow: 0 0 0 7px rgba(255,181,71,.13); }
+.mic svg { width: 40px; height: 40px; color: #241500; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: 18px; background: var(--w-card); font-size: 14px; font-weight: 600; }
+.pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--w-amber); }
+
+/* waveform */
+.wave { display: flex; align-items: center; justify-content: center; gap: 4px; height: 70px; }
+.wave i { width: 6px; border-radius: 3px; background: var(--w-amber); animation: wv 1.1s ease-in-out infinite; }
+@keyframes wv { 0%,100% { transform: scaleY(.45); } 50% { transform: scaleY(1); } }
+
+/* orb */
+.orb { width: 120px; height: 120px; border-radius: 50%; position: relative; background: radial-gradient(circle at 40% 35%, #FFE2B0 0%, #FFB547 38%, #D77A00 70%, #5a2e00 100%); box-shadow: 0 0 40px 6px rgba(255,160,40,.28); animation: breathe 3.2s ease-in-out infinite; }
+.orb.talk { animation: talk .5s ease-in-out infinite alternate; }
+.orb.muted { filter: saturate(.2) brightness(.6); animation: none; box-shadow: none; }
+@keyframes breathe { 50% { transform: scale(1.06); } }
+@keyframes talk { from { transform: scale(.97); } to { transform: scale(1.1); } }
+
+.bubble { align-self: flex-end; max-width: 88%; background: #2C2C30; border-radius: 16px 16px 4px 16px; padding: 7px 10px; font-size: 14.5px; }
+.reply { font-size: 16px; line-height: 1.3; }
+.reply .cursor { display: inline-block; width: 8px; height: 15px; background: var(--w-amber); vertical-align: -2px; border-radius: 1px; animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.dots { display: flex; gap: 6px; padding: 10px 2px; }
+.dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--w-dim); animation: dot 1.2s infinite; }
+.dots i:nth-child(2) { animation-delay: .15s; } .dots i:nth-child(3) { animation-delay: .3s; }
+@keyframes dot { 0%,100% { opacity: .3; } 40% { opacity: 1; } }
+.meter { height: 4px; border-radius: 2px; background: var(--w-faint); overflow: hidden; }
+.meter b { display: block; height: 100%; background: var(--w-amber); }
+.scrollbar { position: absolute; right: 5px; top: 70px; width: 3px; height: 46px; border-radius: 2px; background: #3a3a3e; }
+.speaking { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; margin-right: 6px; }
+.speaking i { width: 3px; background: var(--w-amber); border-radius: 1px; animation: wv .8s ease-in-out infinite; height: 12px; }
+
+/* watch face for complications */
+.face { padding: 0; }
+.face .clock { font-family: var(--watch); font-weight: 600; font-size: 64px; letter-spacing: -.02em; text-align: center; margin-top: 44px; font-variant-numeric: tabular-nums; }
+.face .date { text-align: center; color: var(--w-amber); font-size: 14px; font-weight: 600; margin-top: 18px; }
+.comp { position: absolute; width: 46px; height: 46px; border-radius: 50%; background: #1a1a1c; display: grid; place-items: center; border: 2px solid var(--w-amber); }
+.comp svg { width: 20px; height: 20px; color: var(--w-amber); }
+.widget { background: var(--w-card); border-radius: 18px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
+.widget .wt { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--w-amber); }
+.widget .wb { font-size: 14.5px; line-height: 1.25; }
+
+.actbtn { position: absolute; left: -7px; top: 96px; width: 7px; height: 40px; border-radius: 2px; background: #FF7A1A; }
+.press { position: absolute; left: -46px; top: 104px; font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); }
+
+.notes { margin-top: 56px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; border-top: 1px solid var(--rule); padding-top: 28px; }
+.notes h3 { font-family: var(--display); font-weight: 500; font-size: 18px; margin: 0 0 6px; }
+.notes p { margin: 0; color: var(--ink-2); font-size: 14px; }
+
+@media (max-width: 820px) {
+  header.top, .flow-head { grid-template-columns: 1fr; gap: 12px; }
+  .notes { grid-template-columns: 1fr; }
+  .row { justify-content: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; }
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-mic" viewBox="0 0 24 24"><path fill="currentColor" d="M12 14.5a3.5 3.5 0 0 0 3.5-3.5V5.5a3.5 3.5 0 1 0-7 0V11a3.5 3.5 0 0 0 3.5 3.5Zm6-3.6a.9.9 0 0 0-1.8 0 4.2 4.2 0 0 1-8.4 0 .9.9 0 0 0-1.8 0 6 6 0 0 0 5.1 5.9V19H8.9a.9.9 0 0 0 0 1.8h6.2a.9.9 0 0 0 0-1.8h-2.2v-2.2a6 6 0 0 0 5.1-5.9Z"/></symbol>
+    <symbol id="i-wave" viewBox="0 0 24 24"><path fill="currentColor" d="M4 10h2v4H4zm4-4h2v12H8zm4 2h2v8h-2zm4-5h2v18h-2zm4 7h2v4h-2z"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.5" fill="currentColor"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2.6" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-mute" viewBox="0 0 24 24"><path fill="currentColor" d="M12 14.5a3.5 3.5 0 0 0 3.5-3.5V5.5a3.5 3.5 0 1 0-7 0V11a3.5 3.5 0 0 0 3.5 3.5Zm6-3.6a.9.9 0 0 0-1.8 0 4.2 4.2 0 0 1-8.4 0 .9.9 0 0 0-1.8 0 6 6 0 0 0 5.1 5.9V19H8.9a.9.9 0 0 0 0 1.8h6.2a.9.9 0 0 0 0-1.8h-2.2v-2.2a6 6 0 0 0 5.1-5.9Z"/><path stroke="#000" stroke-width="4" stroke-linecap="round" d="M4 4l16 16"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 4l16 16"/></symbol>
+    <symbol id="i-kbd" viewBox="0 0 24 24"><path fill="currentColor" d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm1 3v2h2V9Zm4 0v2h2V9Zm4 0v2h2V9Zm4 0v2h2V9ZM7 13v2h10v-2Z"/></symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">WatchGPT · codename · watchOS 26+ · design v0.1</div>
+      <h1>Raise, talk, <em>hear the answer.</em> No phone.</h1>
+    </div>
+    <div>
+      <p class="lede"><b>Two modes and one tap.</b> Push-to-talk turns run over plain HTTPS, so they work on every cellular watch. Live mode opens a realtime voice session. Every reply is short, spoken, and captioned for a 46 mm screen.</p>
+      <div class="legend"><span>POST /v1/turns · NDJSON</span><span>WSS /v1/live · PCM16 24 kHz</span><span>amber = the app's tint</span></div>
+    </div>
+  </header>
+
+  <!-- ============ Flow A: push to talk ============ -->
+  <section class="flow" aria-labelledby="fa">
+    <div class="flow-head">
+      <h2 id="fa">Ask</h2>
+      <p>The core loop, from wrist raise to spoken answer in about 2 seconds. It works over Wi-Fi or LTE with no iPhone in range. The mic button is the whole home screen.</p>
+    </div>
+    <div class="row">
+      <figure class="shot">
+        <div class="watch"><div class="screen">
+          <div class="sb"><span class="title">Ask</span><span class="time">9:41</span></div>
+          <div class="body center" style="gap:14px">
+            <div class="mic"><svg><use href="#i-mic"/></svg></div>
+            <span class="pill"><span class="dot"></span>Live</span>
+          </div>
+          <div class="small" style="text-align:center;flex:none">Garlic shrimp, 15 min · 2m ago</div>
+        </div></div>
+        <figcaption><span class="t"><i>A1</i>Home</span><span class="d">Tap the mic to talk, tap again to send. Holding also works. The last answer peeks at the bottom; turn the Crown up to see the thread.</span></figcaption>
+      </figure>
+
+      <figure class="shot">
+        <div class="watch"><div class="screen">
+          <div class="sb"><span class="title">Listening</span><span class="time">0:04</span></div>
+          <div class="body center">
+            <div class="wave" aria-hidden="true">
+              <i style="height:22px"></i><i style="height:48px;animation-delay:.1s"></i><i style="height:64px;animation-delay:.25s"></i><i style="height:36px;animation-delay:.05s"></i><i style="height:58px;animation-delay:.3s"></i><i style="height:28px;animation-delay:.15s"></i><i style="height:44px;animation-delay:.2s"></i><i style="height:18px;animation-delay:.35s"></i>
+            </div>
+            <div class="small">Tap to send · wrist down cancels</div>
+          </div>
+          <div class="foot"><div class="btn red round"><svg><use href="#i-x"/></svg></div><div class="btn amber">Send</div></div>
+        </div></div>
+        <figcaption><span class="t"><i>A2</i>Listening</span><span class="d">Records AAC at 16 kHz mono, about 12 KB/s, capped at 60 s. Haptic tick on start and on send.</span></figcaption>
+      </figure>
+
+      <figure class="shot">
+        <div class="watch"><div class="screen">
+          <div class="sb"><span class="title dim">Ask</span><span class="time">9:41</span></div>
+          <div class="body" style="gap:10px;padding-top:10px">
+            <div class="bubble">What's a good 20 minute dinner with shrimp?</div>
+            <div class="dots"><i></i><i></i><i></i></div>
+          </div>
+          <div class="small" style="flex:none">LTE · Sonnet</div>
+        </div></div>
+        <figcaption><span class="t"><i>A3</i>Transcribed</span><span class="d">The <code>transcript</code> event lands first, so the user sees they were heard before the model answers.</span></figcaption>
+      </figure>
+
+      <figure class="shot">
+        <div class="watch"><div class="screen">
+          <div class="sb"><span class="title"><span class="speaking"><i></i><i style="animation-delay:.2s"></i><i style="animation-delay:.4s"></i></span>Answer</span><span class="time">9:41</span></div>
+          <div class="body" style="padding-top:8px">
+            <div class="reply">Garlic butter shrimp over rice. Sear the shrimp two minutes a side, then toss with butter, garlic and lemon<span class="cursor"></span></div>
+          </div>
+          <div class="scrollbar"></div>
+          <div class="foot"><div class="btn round"><svg><use href="#i-stop"/></svg></div><div class="btn amber"><svg><use href="#i-mic"/></svg></div></div>
+        </div></div>
+        <figcaption><span class="t"><i>A4</i>Answer, spoken</span><span class="d">Speech starts after the first sentence (<code>audio.segment</code> seq 0), while later text streams in. Stop cuts it off; the mic asks a follow-up.</span></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============ Flow B: live ============ -->
+  <section class="flow" aria-labelledby="fb">
+    <div class="flow-head">
+      <h2 id="fb">Live</h2>
+      <p>A hands-free conversation for walks, cooking and driving. The server detects when you stop talking, and you can interrupt it at any time. It's metered in minutes, so the remaining time is always on screen.</p>
+    </div>
+    <div class="row">
+      <figure class="shot">
+        <div class="watch"><div class="screen">
+          <div class="sb"><span class="title">Live</span><span class="time">41:12</span></div>
+          <div class="body center" style="gap:12px">
+            <div class="orb"></div>
+            <div class="small">Listening…</div>
+          </div>
+          <div class="foot"><div class="btn red"><svg><use href="#i-x"/></svg></div><div class="btn"><svg><use href="#i-mute"/></svg></div></div>
+        </div></div>
+        <figcaption><span class="t"><i>B1</i>Listening</span><span class="d">The orb breathes while the mic is open. The top-right timer counts minutes left in the plan. Audio stays running with the wrist down.</span></figcaption>
+      </figure>
+
+      <figure class="shot">
+        <div class="watch"><div class="screen">
+          <div class="sb"><span class="title">Live</span><span class="time">40:58</span></div>
+          <div class="body center" style="gap:12px">
+            <div class="orb talk" style="width:104px;height:104px"></div>
+            <div style="font-size:14.5px;line-height:1.3">Yes, add the spinach last so it just wilts.</div>
+          </div>
+          <div class="foot"><div class="btn red"><svg><use href="#i-x"/></svg></div><div class="btn"><svg><use href="#i-mute"/></svg></div></div>
+        </div></div>
+        <figcaption><span class="t"><i>B2</i>Speaking</span><span class="d">Captions stream from <code>transcript.assistant.delta</code>. If you start talking, the server sends <code>speech.started</code> and the watch drops queued audio within one frame.</span></figcaption>
+      </figure>
+
+      <figure class="shot">
+        <div class="watch"><div class="screen">
+          <div class="sb"><span class="title dim">Live · muted</span><span class="time">38:40</span></div>
+          <div class="body center" style="gap:12px">
+            <div class="orb muted" style="width:96px;height:96px"></div>
+            <div class="small">Mic off. Tap the orb to talk.</div>
+          </div>
+          <div class="foot"><div class="btn red"><svg><use href="#i-x"/></svg></div><div class="btn amber"><svg><use href="#i-mic"/></svg></div></div>
+        </div></div>
+        <figcaption><span class="t"><i>B3</i>Muted</span><span class="d">Mute pauses sending mic audio but keeps the session open for a quick return. After 60 s idle it ends itself to save battery and minutes.</span></figcaption>
+      </figure>
+
+      <figure class="shot">
+        <div class="watch"><div class="screen">
+          <div class="sb"><span class="title">Live ended</span><span class="time">9:58</span></div>
+          <div class="body" style="gap:10px;padding-top:12px">
+            <div style="font-size:30px;font-weight:700;font-variant-numeric:tabular-nums">6:42</div>
+            <div class="small">talked · 38 min left this month</div>
+            <div class="meter"><b style="width:36%"></b></div>
+            <div class="small">Saved to your thread.</div>
+          </div>
+          <div class="foot"><div class="btn amber">Done</div></div>
+        </div></div>
+        <figcaption><span class="t"><i>B4</i>Summary</span><span class="d">The session's transcript joins the same conversation as push-to-talk turns, so the next question has context.</span></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============ Flow C: trust & edges ============ -->
+  <section class="flow" aria-labelledby="fc">
+    <div class="flow-head">
+      <h2 id="fc">Trust &amp; edges</h2>
+      <p>Screens that App Review and real-world connectivity require. Consent names each AI provider before the first request (Guideline 5.1.2(i)). There is no login; the subscription is the account.</p>
+    </div>
+    <div class="row">
+      <figure class="shot">
+        <div class="watch"><div class="screen">
+          <div class="sb"><span class="title">Welcome</span><span class="time">9:40</span></div>
+          <div class="body" style="gap:8px;padding-top:8px">
+            <div style="font-size:15.5px;line-height:1.28">To answer you, your voice and questions are sent to our server and to <b>OpenAI</b> and <b>Anthropic</b>.</div>
+            <div class="small">Never used for training. Deleted after 30 days.</div>
+          </div>
+          <div class="foot"><div class="btn">Details</div><div class="btn amber">Agree</div></div>
+        </div></div>
+        <figcaption><span class="t"><i>C1</i>Consent</span><span class="d">Shown once, before the mic ever opens. Names each third-party AI provider, as 5.1.2(i) requires.</span></figcaption>
+      </figure>
+
+      <figure class="shot">
+        <div class="watch"><div class="screen">
+          <div class="sb"><span class="title">Keep talking</span><span class="time">9:40</span></div>
+          <div class="body" style="gap:6px;padding-top:6px">
+            <div style="font-size:26px;font-weight:700">$9.99<span style="font-size:14px;color:var(--w-dim);font-weight:500"> / month</span></div>
+            <div class="small" style="color:#d6d6da">Unlimited asks<br>60 min of Live per month<br>Best models, no ads</div>
+            <div class="small">7-day free trial · cancel anytime</div>
+          </div>
+          <div class="foot"><div class="btn amber">Start trial</div></div>
+        </div></div>
+        <figcaption><span class="t"><i>C2</i>Paywall</span><span class="d">One tier, bought with StoreKit on the watch. Server returns <code>402 quota_exceeded</code> when trial limits hit; this screen follows.</span></figcaption>
+      </figure>
+
+      <figure class="shot">
+        <div class="watch"><div class="screen">
+          <div class="sb"><span class="title dim">Ask</span><span class="time">9:43</span></div>
+          <div class="body center" style="gap:10px">
+            <svg viewBox="0 0 24 24" style="width:34px;height:34px;color:var(--w-dim)"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M2 8.5a15 15 0 0 1 20 0M5.5 12a10 10 0 0 1 13 0M9 15.5a5 5 0 0 1 6 0M12 19h.01M3 3l18 18"/></svg>
+            <div style="font-size:16px;font-weight:600">No connection</div>
+            <div class="small">Your question is saved. It sends when LTE or Wi-Fi is back.</div>
+          </div>
+          <div class="foot"><div class="btn amber">Retry now</div></div>
+        </div></div>
+        <figcaption><span class="t"><i>C3</i>Offline</span><span class="d">The recording is kept on disk and retried automatically. It's never lost to a dead zone.</span></figcaption>
+      </figure>
+
+      <figure class="shot">
+        <div class="watch"><div class="screen">
+          <div class="sb"><span class="title">Type</span><span class="time">9:44</span></div>
+          <div class="body" style="gap:8px;padding-top:10px">
+            <div style="background:var(--w-card);border-radius:12px;padding:9px 11px;font-size:15px;color:var(--w-dim)">Scribble, dictate or type…</div>
+            <div class="small">For quiet places: uses the system keyboard and dictation, then sends as a text turn.</div>
+          </div>
+          <div class="foot"><div class="btn"><svg><use href="#i-kbd"/></svg></div><div class="btn amber">Send</div></div>
+        </div></div>
+        <figcaption><span class="t"><i>C4</i>Silent input</span><span class="d">Uses the system <code>TextField</code> for input and replies with <code>reply=text</code>, so the speaker stays silent in meetings.</span></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============ Flow D: entry points ============ -->
+  <section class="flow" aria-labelledby="fd">
+    <div class="flow-head">
+      <h2 id="fd">Getting in fast</h2>
+      <p>The app wins or loses on time-to-mic. Every entry point lands in Listening, not on a menu.</p>
+    </div>
+    <div class="row">
+      <figure class="shot">
+        <div class="watch"><div class="screen face">
+          <div class="clock">9:41</div>
+          <div class="date">WED 24</div>
+          <div class="comp" style="left:18px;bottom:20px"><svg><use href="#i-mic"/></svg></div>
+          <div class="comp" style="right:18px;bottom:20px;border-color:#444"><svg style="color:#9a9aa0"><use href="#i-wave"/></svg></div>
+        </div></div>
+        <figcaption><span class="t"><i>D1</i>Complication</span><span class="d">Circular complication on the face: one tap opens straight into Listening. A second one starts Live.</span></figcaption>
+      </figure>
+
+      <figure class="shot">
+        <div class="watch"><div class="screen" style="padding-top:22px;gap:8px">
+          <div class="sb"><span class="title dim" style="color:#fff">9:41</span><span class="time" style="color:var(--w-dim);font-weight:500">Smart Stack</span></div>
+          <div class="widget">
+            <div class="wt"><svg style="width:14px;height:14px"><use href="#i-mic"/></svg>WatchGPT</div>
+            <div class="wb">Tap to ask</div>
+            <div class="small">Last: garlic shrimp in 15 min</div>
+          </div>
+          <div class="widget" style="opacity:.55">
+            <div class="wt" style="color:#8ec5ff">Weather</div>
+            <div class="wb">72° · Clear</div>
+          </div>
+        </div></div>
+        <figcaption><span class="t"><i>D2</i>Smart Stack widget</span><span class="d">A WidgetKit accessory widget. It rises when context suggests it (morning commute, workout end).</span></figcaption>
+      </figure>
+
+      <figure class="shot">
+        <div class="watch" style="border-radius:54px"><span class="actbtn"></span><div class="screen" style="border-radius:44px">
+          <div class="sb"><span class="title">Listening</span><span class="time">0:01</span></div>
+          <div class="body center">
+            <div class="wave" aria-hidden="true">
+              <i style="height:14px"></i><i style="height:30px;animation-delay:.1s"></i><i style="height:40px;animation-delay:.25s"></i><i style="height:22px;animation-delay:.05s"></i><i style="height:34px;animation-delay:.3s"></i><i style="height:16px;animation-delay:.15s"></i>
+            </div>
+            <div class="small">Opened by Action button</div>
+          </div>
+          <div class="foot"><div class="btn red round"><svg><use href="#i-x"/></svg></div><div class="btn amber">Send</div></div>
+        </div></div>
+        <figcaption><span class="t"><i>D3</i>Action button (Ultra)</span><span class="d">Mapped through an App Intent, so a press opens the app already listening. It's the fastest path, and the reason to use Ultra.</span></figcaption>
+      </figure>
+
+      <figure class="shot">
+        <div class="watch"><div class="screen">
+          <div class="sb"><span class="title">Answer</span><span class="time">9:42</span></div>
+          <div class="body" style="padding-top:8px;gap:8px">
+            <div class="reply" style="font-size:15px">It's 18 minutes to the station at your pace. Leave by 9:55.</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:auto">
+              <span style="width:34px;height:34px;border-radius:50%;border:1.5px solid var(--w-amber);display:grid;place-items:center;font-size:11px;color:var(--w-amber);font-weight:700">2×</span>
+              <span class="small">Double tap to reply</span>
+            </div>
+          </div>
+        </div></div>
+        <figcaption><span class="t"><i>D4</i>Double tap</span><span class="d"><code>handGestureShortcut</code> on the primary button: pinch twice to ask a follow-up without touching the screen.</span></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <div class="notes">
+    <div><h3>Voice first, glance second</h3><p>Replies default to 1–3 sentences with no markdown. Text is a caption of what's being spoken, not a document to read.</p></div>
+    <div><h3>One color means "yours"</h3><p>Amber marks what the user can act on and what the assistant is doing. Everything else stays neutral, so it reads in sunlight at a glance.</p></div>
+    <div><h3>Codename only</h3><p>"GPT" in an app name gets rejected (watchGPT had to become Petey in 2023). Pick the ship name before the App Store submission.</p></div>
+  </div>
+</div>
