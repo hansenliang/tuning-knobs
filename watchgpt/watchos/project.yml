@@ -1,0 +1,129 @@
+# XcodeGen spec for the WatchGPT watch-only app.
+#   brew install xcodegen && xcodegen generate && open WatchGPT.xcodeproj
+#
+# Language mode: Swift 5 (Swift 6.2 compiler) + SWIFT_STRICT_CONCURRENCY=complete.
+# Why not Swift 6 mode: this code was written without a compiler. The audio tap,
+# NWConnection and AVFoundation delegate callbacks cross isolation domains with
+# non-Sendable AVFoundation types, and Swift 6 mode would make every unverified
+# isolation guess a hard build error. Clear the strict-concurrency warnings first,
+# then flip SWIFT_VERSION to 6.0.
+
+name: WatchGPT
+
+options:
+  bundleIdPrefix: app.watchgpt
+  deploymentTarget:
+    watchOS: "26.0"
+  xcodeVersion: "26.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: ""            # set your team ID
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+  configs:
+    # Put the gateway URL here, NOT in an .xcconfig file: xcconfig treats "//" as a comment.
+    Debug:
+      GATEWAY_URL: "http://localhost:8787"   # the watch simulator shares the Mac's network stack
+    Release:
+      GATEWAY_URL: "https://api.watchgpt.example"   # placeholder, replace before shipping
+
+targets:
+  WatchGPT:
+    type: application
+    platform: watchOS
+    sources:
+      - path: Sources/App
+      - path: Sources/Models
+      - path: Sources/Services
+      - path: Sources/Views
+      - path: Sources/Intents
+      - path: Sources/Shared
+      - path: Resources/Assets.xcassets
+      - path: WatchGPT.storekit
+        buildPhase: none
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.watchgpt.WatchGPT
+        PRODUCT_NAME: WatchGPT
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+    info:
+      path: Config/WatchGPT-Info.plist
+      properties:
+        CFBundleDisplayName: WatchGPT
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        WKApplication: true
+        WKWatchOnly: true
+        WKRunsIndependentlyOfCompanionApp: true
+        GATEWAY_URL: $(GATEWAY_URL)
+        NSMicrophoneUsageDescription: "WatchGPT listens when you tap the mic or start Live, and sends your voice to answer you."
+        # Background audio keeps a Live session (and a spoken answer) running with the wrist down.
+        # Research (02-watchos-platform.md) cites UIBackgroundModes; the brief asked for
+        # WKBackgroundModes. Both are declared until verified. Keep whichever key Xcode's
+        # Signing & Capabilities > Background Modes > Audio writes, and delete the other.
+        UIBackgroundModes: [audio]
+        WKBackgroundModes: [audio]
+        NSAppTransportSecurity:
+          NSExceptionDomains:
+            localhost:                       # dev gateway only; production is HTTPS
+              NSExceptionAllowsInsecureHTTPLoads: true
+              NSIncludesSubdomains: false
+        CFBundleURLTypes:
+          - CFBundleURLName: app.watchgpt.WatchGPT
+            CFBundleURLSchemes: [watchgpt]   # watchgpt://listen, watchgpt://live
+    entitlements:
+      path: Config/WatchGPT.entitlements
+      properties:
+        com.apple.security.application-groups: [group.app.watchgpt]
+    dependencies:
+      - target: WatchGPTWidgets
+        embed: true
+
+  WatchGPTWidgets:
+    type: app-extension
+    platform: watchOS
+    sources:
+      - path: Widgets
+      - path: Sources/Shared
+      - path: Sources/Views/Theme.swift
+      # Control and widget intents must compile in both targets. The system runs
+      # perform() in the app because the intents set openAppWhenRun.
+      - path: Sources/Intents
+        excludes:
+          - AppShortcuts.swift     # only one AppShortcutsProvider, in the app
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.watchgpt.WatchGPT.widgets
+        PRODUCT_NAME: WatchGPTWidgets
+        SKIP_INSTALL: YES
+    info:
+      path: Config/WatchGPTWidgets-Info.plist
+      properties:
+        CFBundleDisplayName: WatchGPT
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: Config/WatchGPTWidgets.entitlements
+      properties:
+        com.apple.security.application-groups: [group.app.watchgpt]
+
+schemes:
+  WatchGPT:
+    build:
+      targets:
+        WatchGPT: all
+        WatchGPTWidgets: all
+    run:
+      config: Debug
+      storeKitConfiguration: WatchGPT.storekit
+    archive:
+      config: Release
